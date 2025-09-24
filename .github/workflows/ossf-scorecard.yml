@@ -1,0 +1,16 @@
+name: ossf-scorecard
+on:
+  schedule:
+    - cron: "0 03 */2 * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  scorecard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65c0a73b1ba9d1b9a2cc2c84e34e8b5c8f
+      - uses: ossf/scorecard-action@c1d2e3f4a5b6789012345678901234567890abcd
+        with:
+          publish_results: true

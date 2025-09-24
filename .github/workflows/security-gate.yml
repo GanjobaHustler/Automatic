@@ -1,0 +1,56 @@
+name: security-gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 03 * * 1-5"
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  id-token: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@b4ffde65c0a73b1ba9d1b9a2cc2c84e34e8b5c8f
+      - uses: github/codeql-action/init@ea9a2a4cddc7b0e15d4a8b7456f0d84fc11e4c8e
+        with:
+          languages: javascript,python
+          queries: security-extended
+      - uses: github/codeql-action/analyze@ea9a2a4cddc7b0e15d4a8b7456f0d84fc11e4c8e
+  gitleaks:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@b4ffde65c0a73b1ba9d1b9a2cc2c84e34e8b5c8f
+      - uses: gitleaks/gitleaks-action@3a8f2e5b1dd0dc8f4b9e1c8e4f3e9c8d1b9c5f8e
+  trivy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@b4ffde65c0a73b1ba9d1b9a2cc2c84e34e8b5c8f
+      - uses: aquasecurity/trivy-action@f9f0c2446cf86a4c4b69d8ceeb12af7b4de0bd8e
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          exit-code: "1"
+  semgrep:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@b4ffde65c0a73b1ba9d1b9a2cc2c84e34e8b5c8f
+      - uses: returntocorp/semgrep-action@a2b3c4d5e6f7890abcdef1234567890abcdef123
+        with:
+          config: "p/owasp-top-ten"
